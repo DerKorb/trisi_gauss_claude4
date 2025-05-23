@@ -20,6 +20,12 @@ class Program
                     Benchmarks.BenchmarkProgram.RunBenchmarks();
                     break;
                     
+                case "optimized":
+                case "opt":
+                    Console.WriteLine("Running optimized benchmarks...");
+                    Benchmarks.OptimizedBenchmarkRunner.RunOptimizedBenchmarks();
+                    break;
+                    
                 case "compare":
                 case "reference":
                     ReferenceComparison.RunAllComparisons();
@@ -41,6 +47,7 @@ class Program
             Console.WriteLine("To run other modes:");
             Console.WriteLine("  dotnet run examples  - Run usage examples (default)");
             Console.WriteLine("  dotnet run benchmark - Run performance benchmarks");
+            Console.WriteLine("  dotnet run optimized - Run optimized performance benchmarks");
             Console.WriteLine("  dotnet run compare   - Run reference comparisons");
         }
     }

@@ -1,0 +1,20 @@
+# Build Outputs
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# IDEs
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/

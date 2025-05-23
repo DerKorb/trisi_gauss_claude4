@@ -18,6 +18,9 @@ public static class BasicUsage
         NoiseRobustnessExample();
         MultiDimensionalExample();
         
+        Console.WriteLine("\n" + new string('=', 50));
+        PerformanceComparison.RunPerformanceComparison();
+        
         Console.WriteLine("All examples completed successfully!");
     }
 
