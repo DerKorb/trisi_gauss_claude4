@@ -1,0 +1,214 @@
+# High-Performance Nelder-Mead Optimization Library - Product Requirements Document
+
+## Project Overview
+
+Create a high-performance, dependency-free C# implementation of the Nelder-Mead simplex optimization algorithm specifically optimized for double Gaussian curve fitting. The library should match or exceed the performance of established solutions like MathNet Numeric while maintaining cross-platform compatibility.
+
+## Technical Requirements
+
+### Core Algorithm
+- **Nelder-Mead Simplex Implementation**: Complete fminsearch equivalent
+- **Generic Design**: Support both `float` and `double` types using generics (`T`)
+- **Objective Function Interface**: `Func<Span<T>, T>` for objective function
+- **Bounds Support**: Upper and lower bounds handling (unlike pure Nelder-Mead)
+- **Robust Convergence**: Handle poor initial guesses and noisy data (15-20% noise tolerance)
+
+### Target Framework & Platform
+- **.NET Framework**: .NET 9.0 (latest)
+- **Platform**: Cross-platform (Windows, Linux, macOS)
+- **Dependencies**: Zero external dependencies (pure managed C#)
+- **Architecture**: Target x64 with potential SIMD optimizations
+
+### Performance Requirements
+- **Benchmark Target**: Match or exceed MathNet Numeric performance
+- **Reference Validation**: Results should match NLopt reference implementation
+- **Optimization**: Consider vectorization where applicable
+- **Memory**: Minimize allocations, use `Span<T>` for performance
+
+## Functional Requirements
+
+### 1. Core Nelder-Mead Algorithm
+```csharp
+public static class NelderMead<T> where T : IFloatingPoint<T>
+{
+    public static OptimizationResult<T> Minimize(
+        Func<Span<T>, T> objective,
+        Span<T> initialGuess,
+        NelderMeadOptions<T> options = null
+    );
+}
+```
+
+**Algorithm Steps:**
+- Simplex initialization with proper scaling
+- Reflection, expansion, contraction, shrinkage operations
+- Convergence criteria based on function tolerance
+- Bounded optimization via penalty methods or projection
+
+### 2. Double Gaussian Model
+**Parameter Layout**: `[A1, μ1, σ1, A2, μ2, σ2]`
+- A1, A2: Amplitudes of the two Gaussians
+- μ1, μ2: Mean values
+- σ1, σ2: Standard deviations
+
+**Objective Function**: Sum of squared residuals
+```csharp
+public static T SumSquaredResiduals<T>(
+    Span<T> parameters,
+    ReadOnlySpan<T> xData,
+    ReadOnlySpan<T> yData
+) where T : IFloatingPoint<T>
+```
+
+### 3. Bounds Handling
+- Support for box constraints (min/max per parameter)
+- Penalty-based approach for out-of-bounds handling
+- Robust behavior when parameters approach bounds
+
+### 4. Configuration Options
+```csharp
+public class NelderMeadOptions<T>
+{
+    public T FunctionTolerance { get; set; }
+    public T ParameterTolerance { get; set; }
+    public int MaxIterations { get; set; }
+    public ReadOnlySpan<T> LowerBounds { get; set; }
+    public ReadOnlySpan<T> UpperBounds { get; set; }
+    public T InitialSimplexSize { get; set; }
+}
+```
+
+## Project Structure
+
+```
+Optimization.Core/
+├── Algorithms/
+│   ├── NelderMead.cs           # Core algorithm implementation
+│   ├── INelderMeadOptions.cs   # Configuration interface
+│   └── OptimizationResult.cs   # Result type
+├── Models/
+│   ├── DoubleGaussian.cs       # Double Gaussian fitting model
+│   └── ObjectiveFunctions.cs   # Common objective functions
+├── Benchmarks/
+│   ├── NelderMeadBenchmarks.cs # BenchmarkDotNet performance tests
+│   └── ReferenceComparison.cs  # NLopt/MathNet comparison
+└── Tests/
+    ├── AlgorithmTests.cs       # Unit tests for algorithm correctness
+    ├── PerformanceTests.cs     # Performance regression tests
+    └── ConvergenceTests.cs     # Robustness with noisy data
+```
+
+## Performance & Validation Requirements
+
+### Benchmarking Setup
+- **Framework**: BenchmarkDotNet for precise measurements
+- **Baseline**: Compare against MathNet Numeric's optimization methods
+- **Reference**: Validate results against NLopt (external validation)
+- **Test Cases**: 
+  - Clean double Gaussian data
+  - 15% noise scenarios
+  - Poor initial guesses
+  - Various parameter ranges
+
+### Expected Performance Metrics
+- **Speed**: Within 10% of MathNet Numeric performance
+- **Accuracy**: Results should match reference implementations within numerical precision
+- **Robustness**: 95%+ convergence rate with reasonable initial guesses
+- **Memory**: Minimal allocations during optimization
+
+## Technical Implementation Details
+
+### Algorithm Optimizations
+1. **Efficient Simplex Operations**: 
+   - Use flat arrays instead of jagged arrays
+   - Minimize memory allocations
+   - Efficient vertex sorting and selection
+
+2. **Numerical Stability**:
+   - Handle edge cases (σ ≤ 0, infinite values)
+   - Robust convergence criteria
+   - Proper scaling for different parameter magnitudes
+
+3. **SIMD Considerations**:
+   - Vector operations where applicable
+   - Efficient evaluation of multiple Gaussian terms
+   - Consider hardware intrinsics for exp() if beneficial
+
+### NLopt Compatibility Research
+Study NLopt's Nelder-Mead implementation to understand:
+- Initial simplex construction with bounds
+- Bound handling strategies
+- Convergence criteria
+- Parameter scaling methods
+
+**Key Reference**: https://github.com/stevengj/nlopt/tree/main/src/algs/neldermead
+
+## Testing Strategy
+
+### Unit Tests
+- Algorithm correctness with known analytical solutions
+- Boundary condition handling
+- Parameter validation
+- Convergence criteria verification
+
+### Integration Tests
+- Full double Gaussian fitting pipeline
+- Comparison with reference implementations
+- Cross-platform compatibility verification
+
+### Performance Tests
+- Benchmark against MathNet Numeric
+- Memory allocation profiling
+- Convergence speed analysis
+- Scalability with problem size
+
+## Success Criteria
+
+### Functional Success
+- [ ] Algorithm converges reliably for double Gaussian fitting
+- [ ] Results match NLopt reference within numerical tolerance
+- [ ] Handles bounded optimization correctly
+- [ ] Works with noisy data (15-20% noise level)
+
+### Performance Success
+- [ ] Performance within 10% of MathNet Numeric
+- [ ] Zero external dependencies maintained
+- [ ] Cross-platform compatibility verified
+- [ ] Memory usage optimized
+
+### Quality Success
+- [ ] Comprehensive test coverage (>90%)
+- [ ] Clean, maintainable code architecture
+- [ ] Proper documentation and examples
+- [ ] Benchmark suite for regression testing
+
+## Implementation Notes
+
+### Hardware Context
+Target optimization for modern x64 processors with:
+- AMD Threadripper 1950X (32 logical cores)
+- AVX2 instruction set support
+- Linux/Windows compatibility
+
+### Development Environment
+- .NET 9 SDK
+- C# 12 language features
+- BenchmarkDotNet for performance testing
+- xUnit for unit testing
+
+## Deliverables
+
+1. **Core Library**: Complete Nelder-Mead implementation
+2. **Double Gaussian Model**: Specialized fitting functionality  
+3. **Benchmark Suite**: Performance comparison framework
+4. **Test Suite**: Comprehensive validation tests
+5. **Documentation**: Usage examples and API documentation
+6. **Performance Report**: Benchmark results vs. reference implementations
+
+## Timeline Estimate
+- **Phase 1**: Core algorithm implementation (40% of effort)
+- **Phase 2**: Double Gaussian model and bounds handling (30% of effort)  
+- **Phase 3**: Performance optimization and benchmarking (20% of effort)
+- **Phase 4**: Testing and validation (10% of effort)
+
+This specification provides a complete foundation for recreating and improving upon the original implementation with a focus on performance, correctness, and maintainability.
