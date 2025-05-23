@@ -39,6 +39,12 @@ class Program
                     Validation.NLoptEquivalence.ValidateDoubleGaussianEquivalence();
                     break;
                     
+                case "performance":
+                case "perf":
+                    Console.WriteLine("Running NLopt performance comparison...");
+                    NLoptPerformanceComparison.RunPerformanceComparison();
+                    break;
+                    
                 case "examples":
                 case "demo":
                 default:
@@ -58,6 +64,7 @@ class Program
             Console.WriteLine("  dotnet run optimized - Run optimized performance benchmarks");
             Console.WriteLine("  dotnet run compare   - Run reference comparisons");
             Console.WriteLine("  dotnet run validate  - Run NLopt equivalence validation");
+            Console.WriteLine("  dotnet run perf      - Run NLopt performance comparison with charts");
         }
     }
 }
